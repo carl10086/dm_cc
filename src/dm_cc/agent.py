@@ -9,7 +9,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 
 from dm_cc.llm import get_llm, LLMResponse
-from dm_cc.tools.base import Tool, ToolResult
+from dm_cc.tools.base import Tool
 
 console = Console()
 
@@ -80,6 +80,7 @@ class Agent:
                             "type": "tool_result",
                             "tool_use_id": result["tool_use_id"],
                             "content": result["content"],
+                            "is_error": result.get("is_error", False),
                         }]
                     })
 
@@ -93,8 +94,8 @@ class Agent:
 
     async def _execute_tools(
         self, tool_calls: list[Any]
-    ) -> list[dict[str, str]]:
-        """执行工具调用"""
+    ) -> list[dict[str, Any]]:
+        """执行工具调用 - 对齐 opencode 异常处理"""
         results = []
 
         for call in tool_calls:
@@ -107,31 +108,45 @@ class Agent:
             # 查找工具
             tool = self.tools.get(tool_name)
             if not tool:
-                result = ToolResult.error(f"Unknown tool: {tool_name}")
-            else:
-                # 执行工具
-                try:
-                    # 解析参数
-                    if tool.parameters:
-                        params = tool.parameters.model_validate(tool_input)
-                    else:
-                        params = None
+                error_msg = f"Unknown tool: {tool_name}"
+                console.print(Panel(error_msg, title=f"Error: {tool_name}", border_style="red"))
+                results.append({
+                    "tool_use_id": tool_id,
+                    "content": error_msg,
+                    "is_error": True,
+                })
+                continue
 
-                    result = await tool.execute(params)
-                except Exception as e:
-                    result = ToolResult.error(f"{type(e).__name__}: {e}")
+            # 执行工具
+            try:
+                # 解析参数
+                if tool.parameters:
+                    params = tool.parameters.model_validate(tool_input)
+                else:
+                    params = None
 
-            # 显示结果
-            if result.success:
-                # 尝试检测是否为代码并高亮显示
-                content = result.content
-                console.print(Panel(content, title=f"Result: {tool_name}", border_style="green"))
-            else:
-                console.print(Panel(result.content, title=f"Error: {tool_name}", border_style="red"))
+                # 调用工具 - 返回 dict {title, output, metadata}
+                result = await tool.execute(params)
+                output = result.get("output", "")
 
-            results.append({
-                "tool_use_id": tool_id,
-                "content": result.content,
-            })
+                # 显示结果
+                console.print(Panel(output, title=f"Result: {tool_name}", border_style="green"))
+
+                results.append({
+                    "tool_use_id": tool_id,
+                    "content": output,
+                    "is_error": False,
+                })
+
+            except Exception as e:
+                # 工具抛出异常表示错误
+                error_msg = f"{type(e).__name__}: {e}"
+                console.print(Panel(error_msg, title=f"Error: {tool_name}", border_style="red"))
+
+                results.append({
+                    "tool_use_id": tool_id,
+                    "content": error_msg,
+                    "is_error": True,
+                })
 
         return results
