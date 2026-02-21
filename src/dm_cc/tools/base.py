@@ -1,31 +1,19 @@
-"""Tool 基类定义"""
+"""Tool 基类定义 - 对齐 opencode 设计"""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Any, Callable, TypeVar
-
+from typing import Any
 from pydantic import BaseModel
 
 
-@dataclass
-class ToolResult:
-    """工具执行结果"""
-
-    success: bool
-    content: str
-    error: str | None = None
-
-    @classmethod
-    def ok(cls, content: str) -> "ToolResult":
-        return cls(success=True, content=content)
-
-    @classmethod
-    def error(cls, message: str) -> "ToolResult":
-        return cls(success=False, content=message, error=message)
-
-
 class Tool(ABC):
-    """工具基类"""
+    """工具基类 - 对齐 opencode 设计
+
+    子类需要定义:
+    - name: str
+    - description: str
+    - parameters: type[BaseModel]
+    - execute(params) -> dict[str, Any]  # 抛出异常表示错误
+    """
 
     # 工具元信息 (子类覆盖)
     name: str = ""
@@ -33,8 +21,15 @@ class Tool(ABC):
     parameters: type[BaseModel] | None = None
 
     @abstractmethod
-    async def execute(self, params: BaseModel) -> ToolResult:
-        """执行工具逻辑"""
+    async def execute(self, params: BaseModel) -> dict[str, Any]:
+        """执行工具逻辑
+
+        Returns:
+            dict with keys: title, output, metadata (optional)
+
+        Raises:
+            Exception: 执行失败时抛出
+        """
         pass
 
     def to_anthropic_schema(self) -> dict[str, Any]:
@@ -46,25 +41,3 @@ class Tool(ABC):
         if self.parameters:
             schema["input_schema"] = self.parameters.model_json_schema()
         return schema
-
-
-# 便捷装饰器
-T = TypeVar("T", bound=BaseModel)
-
-
-def tool(name: str, description: str, params_model: type[T]) -> Callable:
-    """工具装饰器，快速创建 Tool 类"""
-
-    def decorator(func: Callable[[T], ToolResult]) -> type[Tool]:
-        class DynamicTool(Tool):
-            name = name
-            description = description
-            parameters = params_model
-
-            async def execute(self, params: BaseModel) -> ToolResult:
-                return func(params)  # type: ignore
-
-        DynamicTool.__name__ = f"{name.title()}Tool"
-        return DynamicTool
-
-    return decorator
