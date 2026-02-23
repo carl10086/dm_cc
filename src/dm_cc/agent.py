@@ -11,6 +11,7 @@ from rich.syntax import Syntax
 from dm_cc.llm import get_llm, LLMResponse
 from dm_cc.tools.base import Tool
 from dm_cc.tools.edit import UserCancelledError
+from dm_cc.session_logger import SessionLogger
 
 console = Console()
 
@@ -35,66 +36,81 @@ class Agent:
         """运行 Agent 循环"""
         ctx = AgentContext()
 
-        # 初始用户消息
-        ctx.messages.append({"role": "user", "content": user_input})
+        # 初始化会话日志
+        with SessionLogger() as logger:
+            # 初始用户消息
+            ctx.messages.append({"role": "user", "content": user_input})
 
-        console.print(f"[dim]Agent started with {len(self.tools)} tools[/dim]")
-        console.print()
+            # 记录用户输入
+            logger.log_user_input(user_input)
 
-        while ctx.step < ctx.max_steps:
-            ctx.step += 1
-            console.print(f"[dim]Step {ctx.step}...[/dim]")
+            console.print(f"[dim]Agent started with {len(self.tools)} tools[/dim]")
+            console.print()
 
-            # 调用 LLM
-            llm = await get_llm()
-            response = await llm.complete(ctx.messages, self.tool_list)
+            while ctx.step < ctx.max_steps:
+                ctx.step += 1
 
-            # 处理工具调用
-            if response.has_tool_calls:
-                # 添加助手消息（包含工具调用）
-                assistant_content = []
-                if response.text:
-                    assistant_content.append({"type": "text", "text": response.text})
+                # 开始新的循环日志
+                logger.start_loop()
+                console.print(f"[dim]Step {ctx.step}...[/dim]")
 
-                for tool_call in response.tool_calls:
-                    assistant_content.append({
-                        "type": "tool_use",
-                        "id": tool_call.id,
-                        "name": tool_call.name,
-                        "input": tool_call.input,
-                    })
+                # 记录给 LLM 的请求
+                logger.log_llm_request(ctx.messages, self.tool_list)
 
-                ctx.messages.append({"role": "assistant", "content": assistant_content})
+                # 调用 LLM
+                llm = await get_llm()
+                response = await llm.complete(ctx.messages, self.tool_list)
 
-                # 显示 AI 的思考
-                if response.text:
-                    console.print(Panel(response.text, title="Claude", border_style="blue"))
+                # 记录 LLM 响应
+                logger.log_llm_response(response)
 
-                # 执行工具
-                tool_results = await self._execute_tools(response.tool_calls)
+                # 处理工具调用
+                if response.has_tool_calls:
+                    # 添加助手消息（包含工具调用）
+                    assistant_content = []
+                    if response.text:
+                        assistant_content.append({"type": "text", "text": response.text})
 
-                # 添加工具结果到消息
-                for result in tool_results:
-                    ctx.messages.append({
-                        "role": "user",
-                        "content": [{
-                            "type": "tool_result",
-                            "tool_use_id": result["tool_use_id"],
-                            "content": result["content"],
-                            "is_error": result.get("is_error", False),
-                        }]
-                    })
+                    for tool_call in response.tool_calls:
+                        assistant_content.append({
+                            "type": "tool_use",
+                            "id": tool_call.id,
+                            "name": tool_call.name,
+                            "input": tool_call.input,
+                        })
 
-                continue  # 继续循环
+                    ctx.messages.append({"role": "assistant", "content": assistant_content})
 
-            # 纯文本响应，任务完成
-            console.print(Panel(response.text, title="Claude", border_style="green"))
-            return response.text
+                    # 显示 AI 的思考
+                    if response.text:
+                        console.print(Panel(response.text, title="Claude", border_style="blue"))
 
-        return f"Reached max steps ({ctx.max_steps})"
+                    # 执行工具
+                    tool_results = await self._execute_tools(response.tool_calls, logger)
+
+                    # 添加工具结果到消息
+                    for result in tool_results:
+                        ctx.messages.append({
+                            "role": "user",
+                            "content": [{
+                                "type": "tool_result",
+                                "tool_use_id": result["tool_use_id"],
+                                "content": result["content"],
+                                "is_error": result.get("is_error", False),
+                            }]
+                        })
+
+                    continue  # 继续循环
+
+                # 纯文本响应，任务完成
+                logger.log_assistant_text(response.text)
+                console.print(Panel(response.text, title="Claude", border_style="green"))
+                return response.text
+
+            return f"Reached max steps ({ctx.max_steps})"
 
     async def _execute_tools(
-        self, tool_calls: list[Any]
+        self, tool_calls: list[Any], logger: SessionLogger
     ) -> list[dict[str, Any]]:
         """执行工具调用 - 对齐 opencode 异常处理"""
         results = []
@@ -111,6 +127,7 @@ class Agent:
             if not tool:
                 error_msg = f"Unknown tool: {tool_name}"
                 console.print(Panel(error_msg, title=f"Error: {tool_name}", border_style="red"))
+                logger.log_tool_execution(tool_name, tool_input, {"error": error_msg}, is_error=True)
                 results.append({
                     "tool_use_id": tool_id,
                     "content": error_msg,
@@ -133,6 +150,9 @@ class Agent:
                 # 显示结果
                 console.print(Panel(output, title=f"Result: {tool_name}", border_style="green"))
 
+                # 记录工具执行成功
+                logger.log_tool_execution(tool_name, tool_input, result, is_error=False)
+
                 results.append({
                     "tool_use_id": tool_id,
                     "content": output,
@@ -144,6 +164,9 @@ class Agent:
                 error_msg = str(e)
                 console.print(Panel(error_msg, title=f"Cancelled: {tool_name}", border_style="yellow"))
 
+                # 记录工具执行取消
+                logger.log_tool_execution(tool_name, tool_input, {"cancelled": error_msg}, is_error=True)
+
                 results.append({
                     "tool_use_id": tool_id,
                     "content": error_msg,
@@ -154,6 +177,9 @@ class Agent:
                 # 工具抛出异常表示错误
                 error_msg = f"{type(e).__name__}: {e}"
                 console.print(Panel(error_msg, title=f"Error: {tool_name}", border_style="red"))
+
+                # 记录工具执行错误
+                logger.log_tool_execution(tool_name, tool_input, {"error": error_msg}, is_error=True)
 
                 results.append({
                     "tool_use_id": tool_id,
