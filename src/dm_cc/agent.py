@@ -10,6 +10,7 @@ from rich.syntax import Syntax
 
 from dm_cc.llm import get_llm, LLMResponse
 from dm_cc.tools.base import Tool
+from dm_cc.tools.edit import UserCancelledError
 
 console = Console()
 
@@ -136,6 +137,17 @@ class Agent:
                     "tool_use_id": tool_id,
                     "content": output,
                     "is_error": False,
+                })
+
+            except UserCancelledError as e:
+                # 用户取消操作
+                error_msg = str(e)
+                console.print(Panel(error_msg, title=f"Cancelled: {tool_name}", border_style="yellow"))
+
+                results.append({
+                    "tool_use_id": tool_id,
+                    "content": error_msg,
+                    "is_error": True,
                 })
 
             except Exception as e:
