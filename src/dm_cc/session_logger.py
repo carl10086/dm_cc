@@ -76,8 +76,31 @@ Timestamp: {timestamp}
 """
         self._append(content)
 
-    def log_llm_request(self, messages: list[dict[str, Any]], tools: list[Any]) -> None:
-        """记录给 LLM 的请求（消息和工具）"""
+    def log_system_prompt(self, prompt: str) -> None:
+        """记录完整 System Prompt
+
+        Args:
+            prompt: System Prompt 字符串
+        """
+        content = f"""--- SYSTEM PROMPT ---
+{prompt}
+
+"""
+        self._append(content)
+
+    def log_llm_request(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[Any],
+        system_prompt: str | None = None,
+    ) -> None:
+        """记录给 LLM 的请求（消息和工具）
+
+        Args:
+            messages: 发送给 LLM 的消息列表
+            tools: 可用工具列表
+            system_prompt: 可选的系统提示（已单独记录，此处仅用于确认）
+        """
         # 格式化消息
         messages_str = json.dumps(messages, indent=2, ensure_ascii=False)
 

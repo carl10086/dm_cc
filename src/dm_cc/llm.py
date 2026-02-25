@@ -34,52 +34,33 @@ class AnthropicClient:
         self.model = settings.anthropic_model
         self.max_tokens = settings.anthropic_max_tokens
 
-    def _build_system_prompt(self, tools: list["Tool"]) -> str:
-        """构建 System Prompt"""
-        tool_list = "\n".join([f"- {t.name}: {t.description}" for t in tools])
-
-        return f"""You are dm_cc, a coding assistant powered by Claude.
-
-Your task is to help users with software engineering tasks through an interactive terminal interface.
-
-## Available Tools
-
-You have access to the following tools:
-{tool_list}
-
-## Guidelines
-
-1. Think step by step before taking action
-2. Use tools to explore and understand the codebase
-3. Read files before editing them
-4. Explain what you're doing before making changes
-5. Verify your changes work correctly
-
-## Tool Usage
-
-- Use `read` to examine files
-- Use `glob` to find files matching patterns
-- Use `edit` to modify files
-- Use `bash` to run commands
-
-When you need to take action, use the appropriate tool. The system will execute it and return the result to you.
-"""
-
     async def complete(
         self,
         messages: list[dict[str, Any]],
         tools: list["Tool"],
+        system_prompt: str | None = None,
     ) -> LLMResponse:
-        """调用 LLM 完成对话"""
+        """调用 LLM 完成对话
 
+        Args:
+            messages: 对话消息列表
+            tools: 可用工具列表
+            system_prompt: 可选的系统提示，不提供则使用默认
+
+        Returns:
+            LLM 响应封装
+        """
         # 转换工具为 Anthropic 格式
         tool_schemas = [t.to_anthropic_schema() for t in tools]
+
+        # 使用提供的 system_prompt 或空字符串
+        system = system_prompt if system_prompt else ""
 
         # 调用 API
         response = await self.client.messages.create(
             model=self.model,
             max_tokens=self.max_tokens,
-            system=self._build_system_prompt(tools),
+            system=system,
             messages=messages,  # type: ignore
             tools=tool_schemas,  # type: ignore
         )
