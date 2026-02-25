@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
+from dm_cc.lsp import LSPChecker
 from dm_cc.tools.base import Tool
 
 # 加载 description
@@ -157,8 +158,14 @@ class WriteTool(Tool):
         action = "overwritten" if exists else "created"
         output = f"File {action} successfully."
 
-        # TODO: 未来可以添加 LSP 诊断检查（类似 opencode）
-        # 目前 dm_cc 还没有 LSP 集成
+        # ===== 新增: LSP 检查 =====
+        # 只对 Python 文件进行 LSP 检查
+        if path.suffix == ".py":
+            checker = LSPChecker()
+            errors = checker.check_python(path)
+            if errors:
+                output += checker.format_diagnostics(errors, path)
+        # ==========================
 
         return {
             "title": title,

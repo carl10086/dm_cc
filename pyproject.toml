@@ -8,6 +8,7 @@ dependencies = [
     "anthropic>=0.79.0",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
+    "pyright>=1.1.408",
     "rich>=14.3.2",
     "typer>=0.23.0",
 ]
