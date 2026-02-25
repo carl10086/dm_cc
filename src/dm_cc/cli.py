@@ -9,7 +9,7 @@ from rich.panel import Panel
 
 from dm_cc.agent import Agent
 from dm_cc.tools import EditTool, GlobTool, ReadTool
-from dm_cc.config import get_api_key
+from dm_cc.config import get_api_key, settings
 
 app = typer.Typer(name="dmcc", help="dm_cc - DeepClone Coding Agent")
 console = Console()
@@ -39,7 +39,7 @@ def run(
 
     console.print(Panel(
         "[bold]dm_cc[/bold] - DeepClone Coding Agent\n"
-        f"Model: Claude 3.5 Sonnet\n"
+        f"Model: {settings.anthropic_model}\n"
         f"Tools: {', '.join(agent.tools.keys())}",
         border_style="blue"
     ))
@@ -60,7 +60,7 @@ async def _run_once(agent: Agent, prompt: str) -> None:
 
 async def _run_interactive(agent: Agent) -> None:
     """交互模式"""
-    console.print("\n[dim]Enter your request (Ctrl+C to exit):[/dim]\n")
+    console.print("\n[dim]Enter your request (q/exit to quit):[/dim]\n")
 
     while True:
         try:
@@ -68,6 +68,11 @@ async def _run_interactive(agent: Agent) -> None:
             user_input = typer.prompt("You")
             if not user_input.strip():
                 continue
+
+            # 检查退出命令
+            if user_input.strip().lower() in ("q", "exit"):
+                console.print("\n[dim]Goodbye![/dim]")
+                break
 
             console.print()
             await agent.run(user_input)
