@@ -1,4 +1,4 @@
-"""Agent - 简化的单一 Agent 实现"""
+"""Agent - 支持多 Agent 和权限控制的实现"""
 
 from dataclasses import dataclass, field
 from typing import Any
@@ -6,11 +6,13 @@ from typing import Any
 from rich.console import Console
 from rich.panel import Panel
 
+from dm_cc.agents.config import AgentConfig, get_agent_config
 from dm_cc.llm import get_llm, LLMResponse
 from dm_cc.prompt import PromptBuilder
 from dm_cc.session_logger import SessionLogger
 from dm_cc.tools.base import Tool
 from dm_cc.tools.edit import UserCancelledError
+from dm_cc.tools import load_all_tools
 
 console = Console()
 
@@ -25,23 +27,41 @@ class AgentContext:
 
 
 class Agent:
-    """默认 Agent - 执行代码编辑和构建任务
+    """Agent - 支持配置和权限控制
 
-n    用于:
+    用于:
     - 读取和理解代码
     - 编辑和修改文件
     - 运行命令
     - 完成软件工程任务
+
+    支持通过 agent_name 切换不同角色（build, plan 等）。
     """
 
-    def __init__(self, tools: list[Tool]):
+    def __init__(
+        self,
+        tools: list[Tool] | None = None,
+        agent_name: str = "build",
+    ):
         """初始化 Agent
 
         Args:
-            tools: 可用工具列表
+            tools: 可用工具列表，如果为 None 则根据 agent_name 加载
+            agent_name: Agent 配置名称，默认 "build"
         """
-        self.tools = {t.name: t for t in tools}
-        self.tool_list = list(tools)
+        self.agent_name = agent_name
+        self.config = get_agent_config(agent_name)
+
+        # 加载并过滤工具
+        all_tools = tools if tools is not None else load_all_tools()
+        if isinstance(all_tools, dict):
+            all_tools_dict = all_tools
+        else:
+            all_tools_dict = {t.name: t for t in all_tools}
+
+        self.tools = self.config.filter_tools(all_tools_dict)
+        self.tool_list = list(self.tools.values())
+
         self.prompt_builder = PromptBuilder()
         self.ctx = AgentContext()
         self.logger = SessionLogger()

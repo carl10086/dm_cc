@@ -6,4 +6,19 @@ from dm_cc.tools.glob import GlobTool
 from dm_cc.tools.read import ReadTool
 from dm_cc.tools.write import WriteTool
 
-__all__ = ["Tool", "EditTool", "GlobTool", "ReadTool", "WriteTool"]
+__all__ = ["Tool", "EditTool", "GlobTool", "ReadTool", "WriteTool", "load_all_tools"]
+
+
+def load_all_tools() -> dict[str, Tool]:
+    """加载所有可用工具
+
+    Returns:
+        工具字典 {name: tool_instance}
+    """
+    tools = [
+        ReadTool(),
+        WriteTool(),
+        GlobTool(),
+        EditTool(),
+    ]
+    return {t.name: t for t in tools}
