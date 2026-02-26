@@ -18,3 +18,8 @@ dmcc = "dm_cc.cli:app"
 
 [tool.uv]
 package = true
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]

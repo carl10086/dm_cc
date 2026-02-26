@@ -8,7 +8,6 @@ from rich.console import Console
 from rich.panel import Panel
 
 from dm_cc.agent import Agent
-from dm_cc.tools import EditTool, GlobTool, ReadTool, WriteTool
 from dm_cc.config import get_api_key, settings
 
 app = typer.Typer(name="dmcc", help="dm_cc - DeepClone Coding Agent")
@@ -33,9 +32,8 @@ def run(
         console.print(f"[red]Error: {e}[/red]")
         raise typer.Exit(1)
 
-    # 初始化 Agent（read, write, glob, edit 工具）
-    tools = [ReadTool(), WriteTool(), GlobTool(), EditTool()]
-    agent = Agent(tools)
+    # 初始化 Agent（使用默认 build agent，包含所有工具）
+    agent = Agent(agent_name="build")
 
     console.print(Panel(
         "[bold]dm_cc[/bold] - DeepClone Coding Agent\n"

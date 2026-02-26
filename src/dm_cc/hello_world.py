@@ -4,6 +4,8 @@
 这是一个简单的示例模块，用于展示基本的 Python 代码结构。
 """
 
+from datetime import datetime
+
 
 def hello(name: str = "World") -> str:
     """返回问候语.
@@ -14,7 +16,8 @@ def hello(name: str = "World") -> str:
     Returns:
         问候语字符串
     """
-    return f"Hello, {name}!"
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return f"Hello, {name}! Current time: {current_time}"
 
 
 def main() -> None:
