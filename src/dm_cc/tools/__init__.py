@@ -5,8 +5,19 @@ from dm_cc.tools.edit import EditTool
 from dm_cc.tools.glob import GlobTool
 from dm_cc.tools.read import ReadTool
 from dm_cc.tools.write import WriteTool
+from dm_cc.tools.plan_enter import PlanEnterTool
+from dm_cc.tools.plan_exit import PlanExitTool
 
-__all__ = ["Tool", "EditTool", "GlobTool", "ReadTool", "WriteTool", "load_all_tools"]
+__all__ = [
+    "Tool",
+    "EditTool",
+    "GlobTool",
+    "ReadTool",
+    "WriteTool",
+    "PlanEnterTool",
+    "PlanExitTool",
+    "load_all_tools",
+]
 
 
 def load_all_tools() -> dict[str, Tool]:
@@ -20,5 +31,7 @@ def load_all_tools() -> dict[str, Tool]:
         WriteTool(),
         GlobTool(),
         EditTool(),
+        PlanEnterTool(),
+        PlanExitTool(),
     ]
     return {t.name: t for t in tools}

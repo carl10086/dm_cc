@@ -107,8 +107,16 @@ def _build_tools_section(tools: list["Tool"]) -> str:
 class PromptBuilder:
     """分层 System Prompt 构建器"""
 
-    async def build(self, tools: list["Tool"]) -> str:
-        """构建完整的 System Prompt"""
+    async def build(self, tools: list["Tool"], extra_prompt: str | None = None) -> str:
+        """构建完整的 System Prompt
+
+        Args:
+            tools: 可用工具列表
+            extra_prompt: 额外的 prompt 内容（如 agent-specific system reminder）
+
+        Returns:
+            完整的 system prompt
+        """
         layers = [
             PROVIDER_TEMPLATE,  # Layer 1
             _build_environment_layer(),  # Layer 2
@@ -116,4 +124,9 @@ class PromptBuilder:
             _build_tools_section(tools),  # Layer 4 (工具列表)
             AGENT_TEMPLATE,  # Layer 4 (Agent 指南)
         ]
+
+        # 添加额外的 prompt（如 Plan 模式的 system reminder）
+        if extra_prompt:
+            layers.append(extra_prompt)
+
         return "\n\n".join([layer for layer in layers if layer])
