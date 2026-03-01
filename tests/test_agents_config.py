@@ -106,15 +106,17 @@ class TestPredefinedAgents:
         config = AGENTS["build"]
         assert config.name == "build"
         assert "*" in config.allowed_tools
-        assert config.denied_tools == []
+        assert "plan_exit" in config.denied_tools  # Build agent 不能用 plan_exit
 
     def test_plan_agent_exists(self):
         """测试 plan agent 存在且配置正确"""
         assert "plan" in AGENTS
         config = AGENTS["plan"]
         assert config.name == "plan"
-        assert set(config.allowed_tools) == {"read", "glob"}
-        assert config.denied_tools == []
+        # Plan agent 允许 read, glob, write, edit, plan_exit
+        assert set(config.allowed_tools) == {"read", "glob", "write", "edit", "plan_exit"}
+        # Plan agent 不能用 bash
+        assert "bash" in config.denied_tools
 
     def test_get_agent_config_success(self):
         """测试获取已知 agent 配置"""

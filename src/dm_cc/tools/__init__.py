@@ -1,6 +1,7 @@
 """Tools 包 - Agent 可调用的工具集合"""
 
 from dm_cc.tools.base import Tool
+from dm_cc.tools.bash import BashTool
 from dm_cc.tools.edit import EditTool
 from dm_cc.tools.glob import GlobTool
 from dm_cc.tools.read import ReadTool
@@ -10,6 +11,7 @@ from dm_cc.tools.plan_exit import PlanExitTool
 
 __all__ = [
     "Tool",
+    "BashTool",
     "EditTool",
     "GlobTool",
     "ReadTool",
@@ -33,5 +35,6 @@ def load_all_tools() -> dict[str, Tool]:
         EditTool(),
         PlanEnterTool(),
         PlanExitTool(),
+        BashTool(),
     ]
     return {t.name: t for t in tools}

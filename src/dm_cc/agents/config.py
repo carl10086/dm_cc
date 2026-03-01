@@ -59,6 +59,7 @@ AGENTS: dict[str, AgentConfig] = {
 你的任务是帮助用户完成软件开发任务，包括：
 - 读取和理解代码库结构
 - 编辑、修改和创建文件
+- 运行 shell 命令 (git, python, npm, etc.)
 - 分析代码问题并提供解决方案
 - 完成软件工程任务
 
@@ -69,7 +70,7 @@ AGENTS: dict[str, AgentConfig] = {
 4. 提供清晰、有用的响应
 5. 复杂任务先调用 plan_enter 切换到 Plan Agent 进行规划
 
-你有权限使用文件编辑工具（read, write, edit, glob）。
+你有权限使用文件编辑工具（read, write, edit, glob）和 bash 工具。
 不能直接使用 plan_exit（这是 Plan Agent 的权限）。""",
         allowed_tools=["*"],
         denied_tools=["plan_exit"],  # Build agent 不能使用 plan_exit
@@ -89,12 +90,13 @@ AGENTS: dict[str, AgentConfig] = {
 限制：
 - 只能读取代码文件，不能编辑代码文件
 - 只能编辑 .dm_cc/plans/ 目录下的 plan 文件
+- 不能执行 shell 命令 (bash)
 - 专注于分析和规划
 - 完成后调用 plan_exit 切换回 Build Agent 执行
 
 你有权限使用只读工具（read, glob）和 plan 文件编辑工具（write, edit）。""",
         allowed_tools=["read", "glob", "write", "edit", "plan_exit"],
-        denied_tools=[],  # 权限控制在 agent.py 的 _execute_tools 中实现
+        denied_tools=["bash"],  # Plan agent 不能使用 bash
     ),
 }
 
