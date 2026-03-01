@@ -1,0 +1,19 @@
+Execute a bash command in the terminal.
+
+Use this tool when you need to:
+- Run git commands (status, diff, log, add, commit, etc.)
+- Run build commands (python, uv, npm, make, etc.)
+- Check system information
+- Navigate directories
+- Any shell command execution
+
+Do NOT use this tool for:
+- Simple file reading (use read tool instead)
+- File editing (use edit tool instead)
+- Searching files (use glob tool instead)
+
+Important:
+- The command runs in the project directory by default
+- You can specify a different working directory with workdir
+- Commands have a 2 minute timeout by default
+- Dangerous commands (rm, mv, cp, chmod, etc.) require extra caution
