@@ -95,7 +95,7 @@ AGENTS: dict[str, AgentConfig] = {
 - 完成后调用 plan_exit 切换回 Build Agent 执行
 
 你有权限使用只读工具（read, glob）和 plan 文件编辑工具（write, edit）。""",
-        allowed_tools=["read", "glob", "write", "edit", "plan_exit"],
+        allowed_tools=["read", "glob", "write", "edit", "plan_exit", "todo_read", "todo_write"],
         denied_tools=["bash"],  # Plan agent 不能使用 bash
     ),
 }
