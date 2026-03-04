@@ -57,25 +57,31 @@ async def ask_user(
 
     console.print()
 
-    try:
-        response = input("Enter choice (number or label): ").strip()
-    except (EOFError, KeyboardInterrupt):
-        raise UserCancelledError("User cancelled")
+    while True:
+        try:
+            response = input("Enter choice (number or label): ").strip()
+        except (EOFError, KeyboardInterrupt):
+            raise UserCancelledError("User cancelled")
 
-    # 解析输入
-    # 支持数字或标签
-    if response.isdigit():
-        idx = int(response) - 1
-        if 0 <= idx < len(options):
-            return options[idx][0]
-    else:
-        # 直接匹配 label
-        for label, _ in options:
-            if label.lower() == response.lower():
-                return label
+        # 空输入时重新提示，而不是取消
+        if not response:
+            console.print("[yellow]Input cannot be empty. Please enter a choice.[/yellow]")
+            continue
 
-    # 无效输入
-    raise UserCancelledError(f"Invalid choice: {response}")
+        # 解析输入
+        # 支持数字或标签
+        if response.isdigit():
+            idx = int(response) - 1
+            if 0 <= idx < len(options):
+                return options[idx][0]
+        else:
+            # 直接匹配 label
+            for label, _ in options:
+                if label.lower() == response.lower():
+                    return label
+
+        # 无效输入，重新提示
+        console.print(f"[yellow]Invalid choice: '{response}'. Please try again.[/yellow]")
 
 
 async def confirm(

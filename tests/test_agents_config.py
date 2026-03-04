@@ -113,8 +113,8 @@ class TestPredefinedAgents:
         assert "plan" in AGENTS
         config = AGENTS["plan"]
         assert config.name == "plan"
-        # Plan agent 允许 read, glob, write, edit, plan_exit
-        assert set(config.allowed_tools) == {"read", "glob", "write", "edit", "plan_exit"}
+        # Plan agent 允许 read, glob, write, edit, plan_exit, todo_read, todo_write
+        assert set(config.allowed_tools) == {"read", "glob", "write", "edit", "plan_exit", "todo_read", "todo_write"}
         # Plan agent 不能用 bash
         assert "bash" in config.denied_tools
 

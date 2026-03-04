@@ -49,9 +49,9 @@ class TestAgentInitialization:
         """测试 Plan Agent 工具数量"""
         agent = Agent(agent_name="plan")
 
-        # Plan agent 有 5 个工具：read, glob, write, edit, plan_exit
-        assert len(agent.tools) == 5
-        assert len(agent.tool_list) == 5
+        # Plan agent 有 7 个工具：read, glob, write, edit, plan_exit, todo_read, todo_write
+        assert len(agent.tools) == 7
+        assert len(agent.tool_list) == 7
 
     def test_unknown_agent_raises(self):
         """测试未知 Agent 名称报错"""
@@ -93,12 +93,12 @@ class TestAgentWithCustomTools:
         """测试工具按配置过滤"""
         all_tools = load_all_tools()
 
-        # Plan agent 配置允许 read, glob, write, edit, plan_exit
+        # Plan agent 配置允许 read, glob, write, edit, plan_exit, todo_read, todo_write
         agent = Agent(tools=all_tools, agent_name="plan")
 
-        # 虽然传入了所有工具，但配置过滤后只有 5 个
-        assert len(agent.tools) == 5
-        assert set(agent.tools.keys()) == {"read", "glob", "write", "edit", "plan_exit"}
+        # 虽然传入了所有工具，但配置过滤后只有 7 个
+        assert len(agent.tools) == 7
+        assert set(agent.tools.keys()) == {"read", "glob", "write", "edit", "plan_exit", "todo_read", "todo_write"}
 
 
 class TestAgentBackwardCompatibility:
@@ -109,7 +109,7 @@ class TestAgentBackwardCompatibility:
         # 不传 tools 参数也能工作
         agent = Agent(agent_name="build")
         # Build agent 有所有工具，除了 plan_exit
-        assert len(agent.tools) == 6  # read, write, edit, glob, plan_enter, bash
+        assert len(agent.tools) == 8  # read, write, edit, glob, plan_enter, bash, todo_read, todo_write
 
     def test_default_agent_name(self):
         """测试默认 agent_name 为 build"""

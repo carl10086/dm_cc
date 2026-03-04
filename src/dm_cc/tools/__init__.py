@@ -8,6 +8,8 @@ from dm_cc.tools.read import ReadTool
 from dm_cc.tools.write import WriteTool
 from dm_cc.tools.plan_enter import PlanEnterTool
 from dm_cc.tools.plan_exit import PlanExitTool
+from dm_cc.tools.todo_read import TodoReadTool
+from dm_cc.tools.todo_write import TodoWriteTool
 
 __all__ = [
     "Tool",
@@ -18,6 +20,8 @@ __all__ = [
     "WriteTool",
     "PlanEnterTool",
     "PlanExitTool",
+    "TodoReadTool",
+    "TodoWriteTool",
     "load_all_tools",
 ]
 
@@ -36,5 +40,7 @@ def load_all_tools() -> dict[str, Tool]:
         PlanEnterTool(),
         PlanExitTool(),
         BashTool(),
+        TodoReadTool(),
+        TodoWriteTool(),
     ]
     return {t.name: t for t in tools}

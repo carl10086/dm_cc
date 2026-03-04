@@ -1,0 +1,14 @@
+Use this tool to read the current to-do list for the session. This tool should be used proactively and frequently to ensure that you are aware of
+the status of the current task list.
+
+Use this tool:
+- At the beginning of conversations to see what's pending
+- Before starting new tasks to prioritize work
+- When the user asks about previous tasks or plans
+- Whenever you're uncertain what to do next
+- After completing tasks to update your understanding
+- After every few messages to ensure you're on track
+
+Usage:
+- This tool takes in no parameters. Leave it blank.
+- Returns a list of todo items with status, priority, and content
