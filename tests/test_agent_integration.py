@@ -109,7 +109,7 @@ class TestAgentBackwardCompatibility:
         # 不传 tools 参数也能工作
         agent = Agent(agent_name="build")
         # Build agent 有所有工具，除了 plan_exit
-        assert len(agent.tools) == 8  # read, write, edit, glob, plan_enter, bash, todo_read, todo_write
+        assert len(agent.tools) == 9  # read, write, edit, glob, plan_enter, bash, todo_read, todo_write, skill
 
     def test_default_agent_name(self):
         """测试默认 agent_name 为 build"""
