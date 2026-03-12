@@ -19,6 +19,8 @@ class AgentConfig:
         system_prompt: 系统提示词
         allowed_tools: 允许使用的工具列表，["*"] 表示全部允许
         denied_tools: 禁止使用的工具列表，优先级高于 allowed_tools
+        allowed_skills: 允许使用的 skill 列表，["*"] 表示全部允许
+        denied_skills: 禁止使用的 skill 列表，优先级高于 allowed_skills
     """
 
     name: str
@@ -26,6 +28,15 @@ class AgentConfig:
     system_prompt: str
     allowed_tools: list[str]  # ["*"] 表示全部
     denied_tools: list[str]  # 优先级高于 allowed
+    allowed_skills: list[str] = None  # ["*"] 表示全部
+    denied_skills: list[str] = None   # 优先级高于 allowed
+
+    def __post_init__(self):
+        """初始化默认值"""
+        if self.allowed_skills is None:
+            self.allowed_skills = ["*"]
+        if self.denied_skills is None:
+            self.denied_skills = []
 
     def filter_tools(self, all_tools: dict[str, "Tool"]) -> dict[str, "Tool"]:
         """根据配置过滤可用工具
@@ -47,6 +58,32 @@ class AgentConfig:
             allowed.discard(denied)
 
         return {name: tool for name, tool in all_tools.items() if name in allowed}
+
+    def filter_skills(self, all_skills: dict) -> dict:
+        """根据配置过滤可用 skills
+
+        Args:
+            all_skills: 所有可用 skills 的字典 {name: skill_info}
+
+        Returns:
+            过滤后的 skills 字典
+        """
+        if self.allowed_skills is None:
+            self.allowed_skills = ["*"]
+        if self.denied_skills is None:
+            self.denied_skills = []
+
+        # 确定允许的 skill 集合
+        if "*" in self.allowed_skills:
+            allowed = set(all_skills.keys())
+        else:
+            allowed = set(self.allowed_skills)
+
+        # denied_skills 优先级更高，从允许集合中移除
+        for denied in self.denied_skills:
+            allowed.discard(denied)
+
+        return {name: skill for name, skill in all_skills.items() if name in allowed}
 
 
 # 预定义 Agent 配置

@@ -9,6 +9,7 @@ dependencies = [
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
     "pyright>=1.1.408",
+    "python-frontmatter>=1.1.0",
     "rich>=14.3.2",
     "tree-sitter>=0.25.2",
     "tree-sitter-languages>=1.10.2",
